@@ -17,8 +17,9 @@ function SuperAdminPanel({ token }) {
   };
 
   useEffect(() => {
-    chargerAdmins();
-  }, []);
+  chargerAdmins();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, []);
 
   const chargerAdmins = async () => {
     try {

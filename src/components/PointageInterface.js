@@ -7,99 +7,152 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 function PointageInterface() {
   const [telephone, setTelephone] = useState('');
   const [suggestions, setSuggestions] = useState([]);
-  const [message, setMessage] = useState('');
-  const [messageType, setMessageType] = useState('');
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState(null);
+  const [messageType, setMessageType] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
-  // Rechercher automatiquement après 3 chiffres
-  useEffect(() => {
-    const searchMembers = async () => {
+  // Rechercher les membres dès que l'utilisateur tape (après 3 chiffres)
+    useEffect(() => {
+    const rechercher = async () => {
       if (telephone.length >= 3) {
         try {
-          const response = await axios.get(`${API_URL}/membres/search/${telephone}`);
+          const response = await axios.get(`${API_URL}/search-membres/${telephone}`);
           setSuggestions(response.data);
+          setShowSuggestions(true);
         } catch (error) {
           console.error('Erreur recherche:', error);
           setSuggestions([]);
         }
       } else {
         setSuggestions([]);
+        setShowSuggestions(false);
       }
     };
 
-    const timer = setTimeout(searchMembers, 300);
+    // Délai de 300ms avant de rechercher (évite trop de requêtes)
+    const timer = setTimeout(rechercher, 300);
     return () => clearTimeout(timer);
+
+    // ✅ Correction : éviter l’erreur ESLint sur Vercel
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [telephone]);
 
-  const handlePointer = async (membreId, nom, prenom) => {
+  // Fonction appelée quand on clique sur une personne
+  const handleSelectMembre = async (membre) => {
     setLoading(true);
+    setMessage(null);
+    setShowSuggestions(false);
+
     try {
-      const response = await axios.post(`${API_URL}/pointer`, { membre_id: membreId });
-      setMessage(`✅ ${prenom} ${nom} - ${response.data.type} enregistrée`);
-      setMessageType('success');
-      setTelephone('');
-      setSuggestions([]);
+      const response = await axios.post(`${API_URL}/pointer-by-id`, {
+        membreId: membre.id
+      });
+
+      const { membre: membreData, type } = response.data;
+      
+      afficherMessage(
+        `✅ ${membreData.prenom} ${membreData.nom} (${membreData.lien}) - ${type.toUpperCase()} enregistrée`,
+        'success'
+      );
+
+      // Réinitialiser après 3 secondes
+      setTimeout(() => {
+        setTelephone('');
+        setSuggestions([]);
+        setMessage(null);
+      }, 3000);
+
     } catch (error) {
-      setMessage(`❌ ${error.response?.data?.error || 'Erreur'}`);
-      setMessageType('error');
+      const errorMsg = error.response?.data?.error || 'Erreur de connexion';
+      afficherMessage(`❌ ${errorMsg}`, 'error');
     } finally {
       setLoading(false);
-      setTimeout(() => setMessage(''), 3000);
     }
+  };
+
+  const afficherMessage = (text, type) => {
+    setMessage(text);
+    setMessageType(type);
+  };
+
+  const getLienIcon = (lien) => {
+    const icons = {
+      'Papa': '👨',
+      'Maman': '👩',
+      'Enfant': '👶',
+      'Étudiant': '🎓',
+      'Personnel': '👔',
+      'Membre': '👤'
+    };
+    return icons[lien] || '👤';
   };
 
   return (
     <div className="pointage-container">
-      <h2>👋 Bienvenue !</h2>
-      
-      <div className="input-group">
-        <label>📞 Numéro de téléphone</label>
-        <input
-          type="tel"
-          value={telephone}
-          onChange={(e) => setTelephone(e.target.value)}
-          placeholder="Ex : 971..."
-          maxLength="15"
-        />
-      </div>
+      <div className="pointage-card">
+        <h2>👋 Bienvenue !</h2>
+        <p className="subtitle">Entrez votre numéro de téléphone</p>
 
-      {telephone.length >= 3 && suggestions.length === 0 && (
-        <div className="info-box">
-          <p>🔍 Aucun membre trouvé avec ce numéro</p>
-          <p>Contactez l'administrateur pour vous inscrire.</p>
-        </div>
-      )}
+        <div className="search-container">
+          <div className="input-group">
+            <label htmlFor="telephone">📞 Numéro de téléphone</label>
+            <input
+              type="tel"
+              id="telephone"
+              value={telephone}
+              onChange={(e) => setTelephone(e.target.value)}
+              placeholder="Ex: 971..."
+              disabled={loading}
+              autoFocus
+            />
+          </div>
 
-      {suggestions.length > 0 && (
-        <div className="suggestions-list">
-          <h3>Sélectionnez votre nom :</h3>
-          {suggestions.map((membre) => (
-            <div
-              key={membre.id}
-              className="suggestion-item"
-              onClick={() => handlePointer(membre.id, membre.nom, membre.prenom)}
-            >
-              <div className="membre-info">
-                <span className="membre-nom">{membre.prenom} {membre.nom}</span>
-                <span className="membre-lien">{membre.lien}</span>
-              </div>
-              <span className="membre-tel">{membre.telephone}</span>
+          {/* Liste des suggestions */}
+          {showSuggestions && suggestions.length > 0 && (
+            <div className="suggestions-list">
+              <p className="suggestions-title">Sélectionnez votre nom :</p>
+              {suggestions.map(membre => (
+                <button
+                  key={membre.id}
+                  onClick={() => handleSelectMembre(membre)}
+                  className="suggestion-item"
+                  disabled={loading}
+                >
+                  <span className="membre-icon">{getLienIcon(membre.lien)}</span>
+                  <div className="membre-info">
+                    <strong>{membre.prenom} {membre.nom}</strong>
+                    <span className="membre-lien">{membre.lien} • {membre.telephone}</span>
+                  </div>
+                  <span className="arrow">→</span>
+                </button>
+              ))}
             </div>
-          ))}
+          )}
+
+          {/* Message si aucun résultat */}
+          {showSuggestions && suggestions.length === 0 && telephone.length >= 3 && (
+            <div className="no-results">
+              <p>❌ Aucune personne trouvée avec ce numéro</p>
+              <p className="small">Contactez l'administrateur pour vous inscrire</p>
+            </div>
+          )}
         </div>
-      )}
 
-      {message && (
-        <div className={`message ${messageType}`}>
-          {message}
+        {/* Affichage des messages */}
+        {message && (
+          <div className={`message ${messageType}`}>
+            {message}
+          </div>
+        )}
+
+        {/* Info pour les nouveaux */}
+        <div className="info-box">
+          <p>
+            <strong>Première visite ?</strong><br/>
+            Contactez l'administrateur pour vous inscrire.
+          </p>
         </div>
-      )}
-
-      {loading && <div className="loading">⏳ Chargement...</div>}
-
-      <div className="info-box">
-        <h4>Première visite ?</h4>
-        <p>Contactez l'administrateur pour vous inscrire.</p>
       </div>
     </div>
   );

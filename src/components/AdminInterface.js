@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import './AdminInterface.css';
 
@@ -21,10 +20,11 @@ function AdminInterface({ token }) {
   };
 
   useEffect(() => {
-    chargerMembres();
-    chargerMouvements();
-    chargerPresents();
-  }, []);
+  chargerMembres();
+  chargerMouvements();
+  chargerPresents();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, []);
 
   // ==================== FONCTIONS API ====================
 
