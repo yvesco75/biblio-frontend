@@ -23,7 +23,6 @@ function AdminInterface({ token }) {
   chargerMembres();
   chargerMouvements();
   chargerPresents();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
 }, []);
 
   // ==================== FONCTIONS API ====================
