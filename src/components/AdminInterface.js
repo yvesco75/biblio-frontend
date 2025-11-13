@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { saveAs } from 'file-saver';
+import Dashboard from './Dashboard';
 import './AdminInterface.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 function AdminInterface({ token }) {
-  const [activeTab, setActiveTab] = useState('ajout');
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [formData, setFormData] = useState({ nom: '', prenom: '', telephone: '', lien: 'Membre' });
   const [membres, setMembres] = useState([]);
   const [mouvements, setMouvements] = useState([]);
@@ -219,6 +220,12 @@ function AdminInterface({ token }) {
     <div className="admin-container">
       <div className="tabs">
         <button 
+          onClick={() => setActiveTab('dashboard')} 
+          className={activeTab === 'dashboard' ? 'active' : ''}
+        >
+          📊 Dashboard
+        </button>
+        <button 
           onClick={() => setActiveTab('ajout')} 
           className={activeTab === 'ajout' ? 'active' : ''}
         >
@@ -246,7 +253,7 @@ function AdminInterface({ token }) {
           onClick={() => setActiveTab('mouvements')} 
           className={activeTab === 'mouvements' ? 'active' : ''}
         >
-          📊 Historique
+          📋 Historique
         </button>
       </div>
 
@@ -258,6 +265,11 @@ function AdminInterface({ token }) {
 
       <div className="tab-content">
         
+        {/* ONGLET 0 : DASHBOARD */}
+        {activeTab === 'dashboard' && (
+          <Dashboard token={token} />
+        )}
+
         {/* ONGLET 1 : AJOUTER UN MEMBRE */}
         {activeTab === 'ajout' && (
           <div className="form-container">
