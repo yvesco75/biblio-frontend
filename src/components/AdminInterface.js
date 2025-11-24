@@ -8,7 +8,7 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 function AdminInterface({ token }) {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [formData, setFormData] = useState({ nom: '', prenom: '', telephone: '', lien: 'Membre' });
+  const [formData, setFormData] = useState({ nom: '', prenom: '', telephone: '', lien: 'Étudiant' });
   const [membres, setMembres] = useState([]);
   const [mouvements, setMouvements] = useState([]);
   const [presents, setPresents] = useState([]);
@@ -72,7 +72,7 @@ function AdminInterface({ token }) {
     try {
       await axios.post(`${API_URL}/membres`, formData, axiosConfig);
       afficherMessage('✅ Membre ajouté avec succès', 'success');
-      setFormData({ nom: '', prenom: '', telephone: '', lien: 'Membre' });
+      setFormData({ nom: '', prenom: '', telephone: '', lien: 'Étudiant' });
       chargerMembres();
     } catch (error) {
       const errorMsg = error.response?.data?.error || 'Erreur lors de l\'ajout';
@@ -308,17 +308,14 @@ function AdminInterface({ token }) {
                 />
               </div>
               <div className="form-group">
-                <label>Lien avec la bibliothèque</label>
+                <label>Catégorie</label>
                 <select
                   value={formData.lien}
                   onChange={(e) => setFormData({...formData, lien: e.target.value})}
                 >
-                  <option value="Membre">Membre</option>
-                  <option value="Papa">Papa</option>
-                  <option value="Maman">Maman</option>
-                  <option value="Enfant">Enfant</option>
                   <option value="Étudiant">Étudiant</option>
-                  <option value="Personnel">Personnel</option>
+                  <option value="Élève">Élève</option>
+                  <option value="Professionnel">Professionnel</option>
                 </select>
               </div>
               <button type="submit" className="btn-primary">
@@ -338,6 +335,7 @@ function AdminInterface({ token }) {
               <ol>
                 <li>Préparez un fichier Excel (.xlsx) ou CSV (.csv)</li>
                 <li>Les colonnes doivent être : <strong>nom</strong>, <strong>prenom</strong>, <strong>telephone</strong>, <strong>lien</strong> (optionnel)</li>
+                <li>Catégories valides : Étudiant, Élève, Professionnel</li>
                 <li>Taille maximale : 5 MB</li>
                 <li>Exemple :</li>
               </ol>
@@ -355,13 +353,13 @@ function AdminInterface({ token }) {
                     <td>KPOTIN</td>
                     <td>Jean</td>
                     <td>97123456</td>
-                    <td>Membre</td>
+                    <td>Étudiant</td>
                   </tr>
                   <tr>
                     <td>AGBO</td>
                     <td>Marie</td>
                     <td>96654321</td>
-                    <td>Étudiant</td>
+                    <td>Élève</td>
                   </tr>
                 </tbody>
               </table>
@@ -411,7 +409,7 @@ function AdminInterface({ token }) {
                       <th>Nom</th>
                       <th>Prénom</th>
                       <th>Téléphone</th>
-                      <th>Lien</th>
+                      <th>Catégorie</th>
                       <th>Statut</th>
                       <th>Actions</th>
                     </tr>
@@ -422,7 +420,7 @@ function AdminInterface({ token }) {
                         <td>{membre.nom}</td>
                         <td>{membre.prenom}</td>
                         <td>{membre.telephone}</td>
-                        <td>{membre.lien || 'Membre'}</td>
+                        <td>{membre.lien || 'Étudiant'}</td>
                         <td>
                           <span className={`badge ${membre.statut}`}>
                             {membre.statut}
