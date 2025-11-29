@@ -17,7 +17,7 @@
 }
 
 .pointage-card h2 {
-  color: #333;
+  color: hsl(0, 98%, 52%);
   font-size: 32px;
   margin-bottom: 10px;
 }
