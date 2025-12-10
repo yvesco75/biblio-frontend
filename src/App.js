@@ -11,7 +11,6 @@ function App() {
   const [token, setToken] = useState(null);
   const [userRole, setUserRole] = useState(null);
 
-  // Vérifier si l'utilisateur est déjà connecté au démarrage
   useEffect(() => {
     const savedToken = localStorage.getItem('adminToken');
     const savedRole = localStorage.getItem('userRole');
@@ -22,7 +21,6 @@ function App() {
     }
   }, []);
 
-  // Fonction appelée après connexion réussie
   const handleLoginSuccess = (newToken, role) => {
     setToken(newToken);
     setUserRole(role);
@@ -31,7 +29,6 @@ function App() {
     localStorage.setItem('userRole', role);
   };
 
-  // Fonction de déconnexion
   const handleLogout = () => {
     localStorage.removeItem('adminToken');
     localStorage.removeItem('userRole');
@@ -41,45 +38,53 @@ function App() {
     setMode('user');
   };
 
-  // Si mode admin mais pas connecté, afficher le login
   const showLogin = mode === 'admin' && !isAuthenticated;
 
   return (
     <div className="App">
       <header className="header">
+        <div className="header-glow"></div>
         <div className="header-content">
           <div className="logo-section">
-            <img 
-              src="http://www.beninexcellence.org/wp-content/uploads/2020/04/cropped-cropped-cropped-Sans-titre-1.png" 
-              alt="Bénin Excellence" 
-              className="logo-img"
-            />
+            <div className="logo-wrapper">
+              <div className="logo-glow"></div>
+              <img 
+                src="http://www.beninexcellence.org/wp-content/uploads/2020/04/cropped-cropped-cropped-Sans-titre-1.png" 
+                alt="Bénin Excellence" 
+                className="logo-img"
+              />
+            </div>
             <div>
-              <h1>Bibliothèque Bénin Excellence</h1>
-              <p className="subtitle">Système de Pointage</p>
+              <h1 className="header-title">
+                <span className="sparkle">✨</span> Bibliothèque Bénin Excellence
+              </h1>
+              <p className="subtitle">Système de Pointage Intelligent</p>
             </div>
           </div>
           
           <div className="nav-buttons">
             <button 
               onClick={() => setMode('user')}
-              className={mode === 'user' ? 'active' : ''}
+              className={`nav-btn ${mode === 'user' ? 'active' : ''}`}
             >
-              👤 Pointage
+              <span className="btn-icon">👤</span>
+              <span className="btn-text">Pointage</span>
             </button>
             <button 
               onClick={() => setMode('admin')}
-              className={mode === 'admin' ? 'active' : ''}
+              className={`nav-btn ${mode === 'admin' ? 'active' : ''}`}
             >
-              🔐 Administration
+              <span className="btn-icon">🔐</span>
+              <span className="btn-text">Admin</span>
             </button>
             
             {isAuthenticated && mode === 'admin' && (
               <button 
                 onClick={handleLogout}
-                className="btn-logout"
+                className="nav-btn btn-logout"
               >
-                🚪 Déconnexion
+                <span className="btn-icon">🚪</span>
+                <span className="btn-text">Déconnexion</span>
               </button>
             )}
           </div>
@@ -99,11 +104,10 @@ function App() {
       </main>
 
       <footer className="footer">
-        <p>© 2025 - Club IA - Système de gestion bibliothèque</p>
+        <p>© 2025 - Club IA 🤖 - Bénin Excellence</p>
       </footer>
     </div>
   );
 }
 
 export default App;
-// File: PointageInterface.js
