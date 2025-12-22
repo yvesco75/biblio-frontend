@@ -170,6 +170,7 @@ body::after {
   cursor: pointer;
   transition: all 0.3s;
   box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  white-space: nowrap;
 }
 
 .nav-btn:hover {
@@ -268,18 +269,26 @@ body::after {
 
 /* RESPONSIVE */
 @media (max-width: 768px) {
+  .header-content {
+    padding: 15px;
+  }
+
   .header-title {
-    font-size: 22px;
+    font-size: 18px;
+  }
+  
+  .subtitle {
+    font-size: 13px;
   }
   
   .logo-wrapper,
   .logo-img {
-    width: 70px;
-    height: 70px;
+    width: 60px;
+    height: 60px;
   }
   
   .main-content {
-    padding: 30px 15px;
+    padding: 20px 15px;
   }
   
   .nav-buttons {
@@ -287,11 +296,46 @@ body::after {
     justify-content: center;
   }
   
-  .btn-text {
-    display: none;
-  }
-  
+  /* CORRECTION : On garde le texte visible sur mobile */
   .nav-btn {
-    padding: 14px 20px;
+    padding: 12px 20px;
+    font-size: 14px;
+    flex: 1;
+    min-width: 120px;
+    justify-content: center;
+  }
+
+  .btn-icon {
+    font-size: 18px;
+  }
+
+  .btn-text {
+    /* Le texte reste visible ! */
+    display: inline;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-title {
+    font-size: 16px;
+  }
+
+  .subtitle {
+    font-size: 12px;
+  }
+
+  .logo-wrapper,
+  .logo-img {
+    width: 50px;
+    height: 50px;
+  }
+
+  .nav-btn {
+    font-size: 13px;
+    padding: 10px 16px;
+  }
+
+  .btn-icon {
+    font-size: 16px;
   }
 }
