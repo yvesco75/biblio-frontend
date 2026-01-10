@@ -1,14 +1,27 @@
+// src/components/AdminInterface.js - VERSION MISE À JOUR
+// MODIFICATION : Ajouter le champ sexe dans formData et le formulaire
+
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { saveAs } from 'file-saver';
 import Dashboard from './Dashboard';
+import StatsAdvanced from './StatsAdvanced'; // NOUVEAU
 import './AdminInterface.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 function AdminInterface({ token }) {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [formData, setFormData] = useState({ nom: '', prenom: '', telephone: '', lien: 'Étudiant' });
+  
+  // MODIFIÉ : Ajout du champ sexe
+  const [formData, setFormData] = useState({ 
+    nom: '', 
+    prenom: '', 
+    telephone: '', 
+    sexe: 'Masculin', // NOUVEAU
+    lien: 'Étudiant' 
+  });
+  
   const [membres, setMembres] = useState([]);
   const [mouvements, setMouvements] = useState([]);
   const [presents, setPresents] = useState([]);
@@ -16,7 +29,6 @@ function AdminInterface({ token }) {
   const [messageType, setMessageType] = useState('');
   const [isUploading, setIsUploading] = useState(false);
 
-  // Configuration axios avec token
   const axiosConfig = {
     headers: { Authorization: `Bearer ${token}` }
   };
@@ -25,10 +37,7 @@ function AdminInterface({ token }) {
     chargerMembres();
     chargerMouvements();
     chargerPresents();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // ==================== FONCTIONS API ====================
 
   const chargerMembres = async () => {
     try {
@@ -63,8 +72,8 @@ function AdminInterface({ token }) {
   const handleAjoutMembre = async (e) => {
     e.preventDefault();
     
-    // Validation
-    if (!formData.nom.trim() || !formData.prenom.trim() || !formData.telephone.trim()) {
+    // MODIFIÉ : Validation avec sexe
+    if (!formData.nom.trim() || !formData.prenom.trim() || !formData.telephone.trim() || !formData.sexe) {
       afficherMessage('❌ Tous les champs sont requis', 'error');
       return;
     }
@@ -72,7 +81,8 @@ function AdminInterface({ token }) {
     try {
       await axios.post(`${API_URL}/membres`, formData, axiosConfig);
       afficherMessage('✅ Membre ajouté avec succès', 'success');
-      setFormData({ nom: '', prenom: '', telephone: '', lien: 'Étudiant' });
+      // MODIFIÉ : Reset avec sexe
+      setFormData({ nom: '', prenom: '', telephone: '', sexe: 'Masculin', lien: 'Étudiant' });
       chargerMembres();
     } catch (error) {
       const errorMsg = error.response?.data?.error || 'Erreur lors de l\'ajout';
@@ -92,13 +102,10 @@ function AdminInterface({ token }) {
     }
   };
 
-  // ==================== IMPORT EXCEL/CSV ====================
-
   const handleImportFile = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Vérifier l'extension
     const validExtensions = ['.xlsx', '.xls', '.csv'];
     const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
     
@@ -108,7 +115,6 @@ function AdminInterface({ token }) {
       return;
     }
 
-    // Vérifier la taille (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       afficherMessage('❌ Fichier trop volumineux. Maximum 5MB', 'error');
       e.target.value = '';
@@ -129,7 +135,7 @@ function AdminInterface({ token }) {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'multipart/form-data'
           },
-          timeout: 30000 // 30 secondes
+          timeout: 30000
         }
       );
 
@@ -146,7 +152,7 @@ function AdminInterface({ token }) {
       afficherMessage(messageText, erreurs > 0 ? 'warning' : 'success');
       
       chargerMembres();
-      e.target.value = ''; // Reset input
+      e.target.value = '';
     } catch (error) {
       console.error('Erreur import:', error);
       const errorMsg = error.response?.data?.error || 'Erreur lors de l\'import';
@@ -156,8 +162,6 @@ function AdminInterface({ token }) {
       setIsUploading(false);
     }
   };
-
-  // ==================== EXPORT EXCEL ====================
 
   const handleExportMembres = async () => {
     try {
@@ -214,7 +218,12 @@ function AdminInterface({ token }) {
     });
   };
 
-  // ==================== RENDU ====================
+  // NOUVEAU : Icône sexe
+  const getSexeIcon = (sexe) => {
+    if (sexe === 'Masculin') return '👨';
+    if (sexe === 'Féminin') return '👩';
+    return '👤';
+  };
 
   return (
     <div className="admin-container">
@@ -224,6 +233,13 @@ function AdminInterface({ token }) {
           className={activeTab === 'dashboard' ? 'active' : ''}
         >
           📊 Dashboard
+        </button>
+        {/* NOUVEAU : Onglet Statistiques */}
+        <button 
+          onClick={() => setActiveTab('stats')} 
+          className={activeTab === 'stats' ? 'active' : ''}
+        >
+          📈 Statistiques
         </button>
         <button 
           onClick={() => setActiveTab('ajout')} 
@@ -270,7 +286,12 @@ function AdminInterface({ token }) {
           <Dashboard token={token} />
         )}
 
-        {/* ONGLET 1 : AJOUTER UN MEMBRE */}
+        {/* NOUVEAU : ONGLET STATISTIQUES */}
+        {activeTab === 'stats' && (
+          <StatsAdvanced token={token} />
+        )}
+
+        {/* ONGLET 1 : AJOUTER UN MEMBRE - MODIFIÉ */}
         {activeTab === 'ajout' && (
           <div className="form-container">
             <h3>Ajouter un nouveau membre</h3>
@@ -307,6 +328,18 @@ function AdminInterface({ token }) {
                   required
                 />
               </div>
+              {/* NOUVEAU : Champ Sexe */}
+              <div className="form-group">
+                <label>Sexe *</label>
+                <select
+                  value={formData.sexe}
+                  onChange={(e) => setFormData({...formData, sexe: e.target.value})}
+                  required
+                >
+                  <option value="Masculin">👨 Masculin</option>
+                  <option value="Féminin">👩 Féminin</option>
+                </select>
+              </div>
               <div className="form-group">
                 <label>Catégorie</label>
                 <select
@@ -325,7 +358,7 @@ function AdminInterface({ token }) {
           </div>
         )}
 
-        {/* ONGLET 2 : IMPORT EXCEL/CSV */}
+        {/* ONGLET 2 : IMPORT EXCEL/CSV - MODIFIÉ */}
         {activeTab === 'import' && (
           <div className="import-container">
             <h3>📤 Import de membres en masse</h3>
@@ -334,7 +367,8 @@ function AdminInterface({ token }) {
               <h4>📋 Instructions :</h4>
               <ol>
                 <li>Préparez un fichier Excel (.xlsx) ou CSV (.csv)</li>
-                <li>Les colonnes doivent être : <strong>nom</strong>, <strong>prenom</strong>, <strong>telephone</strong>, <strong>lien</strong> (optionnel)</li>
+                <li>Les colonnes doivent être : <strong>nom</strong>, <strong>prenom</strong>, <strong>telephone</strong>, <strong>sexe</strong>, <strong>lien</strong> (lien optionnel)</li>
+                <li>Valeurs sexe : Masculin, Féminin</li>
                 <li>Catégories valides : Étudiant, Élève, Professionnel</li>
                 <li>Taille maximale : 5 MB</li>
                 <li>Exemple :</li>
@@ -345,6 +379,7 @@ function AdminInterface({ token }) {
                     <th>nom</th>
                     <th>prenom</th>
                     <th>telephone</th>
+                    <th>sexe</th>
                     <th>lien</th>
                   </tr>
                 </thead>
@@ -353,12 +388,14 @@ function AdminInterface({ token }) {
                     <td>KPOTIN</td>
                     <td>Jean</td>
                     <td>97123456</td>
+                    <td>Masculin</td>
                     <td>Étudiant</td>
                   </tr>
                   <tr>
                     <td>AGBO</td>
                     <td>Marie</td>
                     <td>96654321</td>
+                    <td>Féminin</td>
                     <td>Élève</td>
                   </tr>
                 </tbody>
@@ -389,7 +426,7 @@ function AdminInterface({ token }) {
           </div>
         )}
 
-        {/* ONGLET 3 : LISTE DES MEMBRES */}
+        {/* ONGLET 3 : LISTE DES MEMBRES - MODIFIÉ */}
         {activeTab === 'membres' && (
           <div className="table-container">
             <div className="table-header">
@@ -408,6 +445,7 @@ function AdminInterface({ token }) {
                     <tr>
                       <th>Nom</th>
                       <th>Prénom</th>
+                      <th>Sexe</th> {/* NOUVEAU */}
                       <th>Téléphone</th>
                       <th>Catégorie</th>
                       <th>Statut</th>
@@ -419,6 +457,14 @@ function AdminInterface({ token }) {
                       <tr key={membre.id}>
                         <td>{membre.nom}</td>
                         <td>{membre.prenom}</td>
+                        <td>
+                          {/* NOUVEAU */}
+                          <span style={{fontSize: '20px'}}>
+                            {getSexeIcon(membre.sexe)}
+                          </span>
+                          {' '}
+                          {membre.sexe || 'Non spécifié'}
+                        </td>
                         <td>{membre.telephone}</td>
                         <td>{membre.lien || 'Étudiant'}</td>
                         <td>

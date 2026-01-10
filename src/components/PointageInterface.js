@@ -1,3 +1,4 @@
+// src/components/PointageInterface.js - VERSION MISE À JOUR
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './PointageInterface.css';
@@ -12,6 +13,20 @@ function PointageInterface() {
   const [messageType, setMessageType] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  
+  // NOUVEAU : État pour le motif de visite
+  const [showMotifSelection, setShowMotifSelection] = useState(false);
+  const [selectedMembre, setSelectedMembre] = useState(null);
+  const [selectedMotifs, setSelectedMotifs] = useState([]);
+
+  const MOTIFS_DISPONIBLES = [
+    { id: 'club-ia', label: 'Club IA 🤖', icon: '🤖' },
+    { id: 'electro-kids', label: 'Electro Kids ⚡', icon: '⚡' },
+    { id: 'python', label: 'Formation Python 🐍', icon: '🐍' },
+    { id: 'lecture', label: 'Lecture/Étude 📚', icon: '📚' },
+    { id: 'recherche', label: 'Recherche 🔍', icon: '🔍' },
+    { id: 'autre', label: 'Autre', icon: '📌' }
+  ];
 
   useEffect(() => {
     const rechercher = async () => {
@@ -32,17 +47,44 @@ function PointageInterface() {
 
     const timer = setTimeout(rechercher, 300);
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [telephone]);
 
-  const handleSelectMembre = async (membre) => {
+  // NOUVEAU : Gestion de la sélection des motifs
+  const handleToggleMotif = (motifId) => {
+    setSelectedMotifs(prev => {
+      if (prev.includes(motifId)) {
+        return prev.filter(m => m !== motifId);
+      } else {
+        return [...prev, motifId];
+      }
+    });
+  };
+
+  // NOUVEAU : Étape 1 - Sélection du membre
+  const handleSelectMembreForMotif = (membre) => {
+    setSelectedMembre(membre);
+    setShowMotifSelection(true);
+    setShowSuggestions(false);
+  };
+
+  // NOUVEAU : Étape 2 - Confirmation avec motif
+  const handleConfirmWithMotif = async () => {
+    if (!selectedMembre) return;
+
     setLoading(true);
     setMessage(null);
-    setShowSuggestions(false);
 
     try {
+      const motifString = selectedMotifs.length > 0 
+        ? MOTIFS_DISPONIBLES
+            .filter(m => selectedMotifs.includes(m.id))
+            .map(m => m.label)
+            .join(', ')
+        : null;
+
       const response = await axios.post(`${API_URL}/pointer-by-id`, {
-        membreId: membre.id
+        membreId: selectedMembre.id,
+        motif: motifString
       });
 
       const { membre: membreData, type } = response.data;
@@ -55,10 +97,7 @@ function PointageInterface() {
       setShowConfetti(true);
 
       setTimeout(() => {
-        setTelephone('');
-        setSuggestions([]);
-        setMessage(null);
-        setShowConfetti(false);
+        resetForm();
       }, 3000);
 
     } catch (error) {
@@ -67,6 +106,17 @@ function PointageInterface() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // NOUVEAU : Réinitialisation du formulaire
+  const resetForm = () => {
+    setTelephone('');
+    setSuggestions([]);
+    setMessage(null);
+    setShowConfetti(false);
+    setShowMotifSelection(false);
+    setSelectedMembre(null);
+    setSelectedMotifs([]);
   };
 
   const afficherMessage = (text, type) => {
@@ -146,82 +196,137 @@ function PointageInterface() {
           </div>
         )}
 
-        {/* Input Section */}
-        <div className="input-section">
-          <label className="input-label">
-            <span className="input-icon">📱</span>
-            Votre numéro de téléphone
-          </label>
-          <div className="input-wrapper">
-            <input
-              type="tel"
-              value={telephone}
-              onChange={(e) => setTelephone(e.target.value.replace(/\D/g, ''))}
-              placeholder="Ex: 971234567"
-              disabled={loading}
-              className="phone-input"
-              autoFocus
-            />
-            {loading && (
-              <div className="loading-spinner">
-                <div className="spinner"></div>
+        {/* NOUVEAU : Sélection du motif */}
+        {showMotifSelection && selectedMembre && (
+          <div className="motif-selection-container">
+            <h3 className="motif-title">
+              📋 Pourquoi venez-vous aujourd'hui ?
+            </h3>
+            <p className="motif-subtitle">
+              Sélectionnez un ou plusieurs motifs (facultatif)
+            </p>
+
+            <div className="motif-grid">
+              {MOTIFS_DISPONIBLES.map(motif => (
+                <button
+                  key={motif.id}
+                  onClick={() => handleToggleMotif(motif.id)}
+                  className={`motif-card ${selectedMotifs.includes(motif.id) ? 'selected' : ''}`}
+                  disabled={loading}
+                >
+                  <span className="motif-icon">{motif.icon}</span>
+                  <span className="motif-label">{motif.label}</span>
+                  {selectedMotifs.includes(motif.id) && (
+                    <span className="motif-check">✓</span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            <div className="motif-actions">
+              <button
+                onClick={() => {
+                  setShowMotifSelection(false);
+                  setSelectedMembre(null);
+                  setSelectedMotifs([]);
+                  setShowSuggestions(true);
+                }}
+                className="btn-secondary"
+                disabled={loading}
+              >
+                ← Retour
+              </button>
+              <button
+                onClick={handleConfirmWithMotif}
+                className="btn-confirm"
+                disabled={loading}
+              >
+                {loading ? '⏳ Enregistrement...' : '✅ Confirmer'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Input Section - Masqué si motif affiché */}
+        {!showMotifSelection && (
+          <>
+            <div className="input-section">
+              <label className="input-label">
+                <span className="input-icon">📱</span>
+                Votre numéro de téléphone
+              </label>
+              <div className="input-wrapper">
+                <input
+                  type="tel"
+                  value={telephone}
+                  onChange={(e) => setTelephone(e.target.value.replace(/\D/g, ''))}
+                  placeholder="Ex: 971234567"
+                  disabled={loading}
+                  className="phone-input"
+                  autoFocus
+                />
+                {loading && (
+                  <div className="loading-spinner">
+                    <div className="spinner"></div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Suggestions */}
+            {showSuggestions && suggestions.length > 0 && (
+              <div className="suggestions-container">
+                <p className="suggestions-label">
+                  <span className="sparkle-icon">✨</span>
+                  Choisissez votre nom :
+                </p>
+                {suggestions.map(membre => (
+                  <button
+                    key={membre.id}
+                    onClick={() => handleSelectMembreForMotif(membre)}
+                    disabled={loading}
+                    className="suggestion-card"
+                  >
+                    <div className={`suggestion-avatar ${getLienColor(membre.lien)}`}>
+                      {getLienIcon(membre.lien)}
+                    </div>
+                    <div className="suggestion-info">
+                      <h3 className="suggestion-name">
+                        {membre.prenom} {membre.nom}
+                      </h3>
+                      <div className="suggestion-details">
+                        <span className={`suggestion-badge ${getLienColor(membre.lien)}`}>
+                          {membre.lien}
+                        </span>
+                        <span className="suggestion-phone">{membre.telephone}</span>
+                      </div>
+                    </div>
+                    <div className="suggestion-check">✓</div>
+                  </button>
+                ))}
               </div>
             )}
-          </div>
-        </div>
 
-        {/* Suggestions */}
-        {showSuggestions && suggestions.length > 0 && (
-          <div className="suggestions-container">
-            <p className="suggestions-label">
-              <span className="sparkle-icon">✨</span>
-              Choisissez votre nom :
-            </p>
-            {suggestions.map(membre => (
-              <button
-                key={membre.id}
-                onClick={() => handleSelectMembre(membre)}
-                disabled={loading}
-                className="suggestion-card"
-              >
-                <div className={`suggestion-avatar ${getLienColor(membre.lien)}`}>
-                  {getLienIcon(membre.lien)}
-                </div>
-                <div className="suggestion-info">
-                  <h3 className="suggestion-name">
-                    {membre.prenom} {membre.nom}
-                  </h3>
-                  <div className="suggestion-details">
-                    <span className={`suggestion-badge ${getLienColor(membre.lien)}`}>
-                      {membre.lien}
-                    </span>
-                    <span className="suggestion-phone">{membre.telephone}</span>
-                  </div>
-                </div>
-                <div className="suggestion-check">✓</div>
-              </button>
-            ))}
-          </div>
-        )}
+            {/* No Results */}
+            {showSuggestions && suggestions.length === 0 && telephone.length >= 3 && (
+              <div className="no-results">
+                <div className="no-results-icon">🔍</div>
+                <h3 className="no-results-title">😕 Aucun résultat</h3>
+                <p className="no-results-text">Contactez l'administrateur pour vous inscrire</p>
+              </div>
+            )}
 
-        {/* No Results */}
-        {showSuggestions && suggestions.length === 0 && telephone.length >= 3 && (
-          <div className="no-results">
-            <div className="no-results-icon">🔍</div>
-            <h3 className="no-results-title">😕 Aucun résultat</h3>
-            <p className="no-results-text">Contactez l'administrateur pour vous inscrire</p>
-          </div>
-        )}
-
-        {/* Info Box */}
-        {!telephone && (
-          <div className="info-box">
-            <div className="info-icon">💡</div>
-            <p className="info-text">
-              <strong>Première visite ?</strong><br/>
-              Demandez votre inscription à l'accueil
-            </p>
-          </div>
+            {/* Info Box */}
+            {!telephone && (
+              <div className="info-box">
+                <div className="info-icon">💡</div>
+                <p className="info-text">
+                  <strong>Première visite ?</strong><br/>
+                  Demandez votre inscription à l'accueil
+                </p>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
