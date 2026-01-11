@@ -77,7 +77,7 @@ function PointageInterface() {
 
       // Si c'est une sortie, pointer directement sans motif
       if (mouvements.length > 0 && mouvements[0].type === 'entrée') {
-        await confirmerSansMot if(membre);
+        await confirmerSansMotif(membre);
       } else {
         // Si c'est une entrée, afficher sélection motif
         setShowMotifSelection(true);
