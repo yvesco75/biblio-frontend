@@ -59,29 +59,10 @@ function PointageInterface() {
   };
 
   // Vérifier si c'est une entrée ou sortie
-  const handleSelectMembreForMotif = async (membre) => {
+  const handleSelectMembreForMotif = (membre) => {
   setSelectedMembre(membre);
-  setLoading(true);
-
-  try {
-    // Vérifier dernier mouvement via API
-    const response = await axios.get(`${API_URL}/mouvements?limit=1000`);
-    const mouvementsMembre = response.data.filter(m => m.membre_id === membre.id);
-    
-    // Si dernier mouvement = entrée → c'est une SORTIE (pas de motif)
-    if (mouvementsMembre.length > 0 && mouvementsMembre[0].type === 'entrée') {
-      await confirmerSansMotif(membre);
-    } else {
-      // Sinon c'est une ENTRÉE → demander motif
-      setShowMotifSelection(true);
-      setShowSuggestions(false);
-      setLoading(false);
-    }
-  } catch (error) {
-    console.error('Erreur:', error);
-    afficherMessage('❌ Erreur de connexion', 'error');
-    setLoading(false);
-  }
+  setShowMotifSelection(true);
+  setShowSuggestions(false);
 };
 
 const confirmerSansMotif = async (membre) => {
