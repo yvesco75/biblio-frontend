@@ -60,61 +60,48 @@ function PointageInterface() {
 
   // Vérifier si c'est une entrée ou sortie
   const handleSelectMembreForMotif = async (membre) => {
-    setSelectedMembre(membre);
-    setLoading(true);
+  setSelectedMembre(membre);
+  setLoading(true);
 
-    try {
-      // Vérifier le dernier mouvement
-      const response = await axios.get(`${API_URL}/mouvements?limit=1000`);
-      const mouvements = response.data.filter(m => m.membre_id === membre.id);
-      
-      if (mouvements.length > 0) {
-        const dernierMouvement = mouvements[0];
-        setIsEntree(dernierMouvement.type === 'sortie');
-      } else {
-        setIsEntree(true);
-      }
-
-      // Si c'est une sortie, pointer directement sans motif
-      if (mouvements.length > 0 && mouvements[0].type === 'entrée') {
-        await confirmerSansMotif(membre);
-      } else {
-        // Si c'est une entrée, afficher sélection motif
-        setShowMotifSelection(true);
-        setShowSuggestions(false);
-      }
-    } catch (error) {
-      console.error('Erreur:', error);
-      afficherMessage('❌ Erreur de connexion', 'error');
-    } finally {
+  try {
+    // Vérifier dernier mouvement via API
+    const response = await axios.get(`${API_URL}/mouvements?limit=1000`);
+    const mouvementsMembre = response.data.filter(m => m.membre_id === membre.id);
+    
+    // Si dernier mouvement = entrée → c'est une SORTIE (pas de motif)
+    if (mouvementsMembre.length > 0 && mouvementsMembre[0].type === 'entrée') {
+      await confirmerSansMotif(membre);
+    } else {
+      // Sinon c'est une ENTRÉE → demander motif
+      setShowMotifSelection(true);
+      setShowSuggestions(false);
       setLoading(false);
     }
-  };
+  } catch (error) {
+    console.error('Erreur:', error);
+    afficherMessage('❌ Erreur de connexion', 'error');
+    setLoading(false);
+  }
+};
 
-  const confirmerSansMotif = async (membre) => {
-    setLoading(true);
-    try {
-      const response = await axios.post(`${API_URL}/pointer-by-id`, {
-        membreId: membre.id,
-        motif: null
-      });
+const confirmerSansMotif = async (membre) => {
+  try {
+    const response = await axios.post(`${API_URL}/pointer-by-id`, {
+      membreId: membre.id,
+      motif: null
+    });
 
-      const { membre: membreData, type } = response.data;
-      
-      afficherMessage(
-        `${membreData.prenom} ${membreData.nom}`,
-        type
-      );
-
-      setShowConfetti(true);
-      setTimeout(() => resetForm(), 3000);
-    } catch (error) {
-      const errorMsg = error.response?.data?.error || 'Erreur de connexion';
-      afficherMessage(`❌ ${errorMsg}`, 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
+    const { membre: membreData, type } = response.data;
+    afficherMessage(`${membreData.prenom} ${membreData.nom}`, type);
+    setShowConfetti(true);
+    setTimeout(() => resetForm(), 3000);
+  } catch (error) {
+    const errorMsg = error.response?.data?.error || 'Erreur de connexion';
+    afficherMessage(`❌ ${errorMsg}`, 'error');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleConfirmWithMotif = async () => {
     if (!selectedMembre) return;
