@@ -15,11 +15,11 @@ function AdminInterface({ token }) {
   
   // MODIFIÉ : Ajout du champ sexe
   const [formData, setFormData] = useState({ 
-    nom: '', 
-    prenom: '', 
-    telephone: '', 
-    sexe: 'Masculin', // NOUVEAU
-    lien: 'Étudiant' 
+  nom: '', 
+  prenom: '', 
+  telephone: '', 
+  sexe: 'Non spécifié',
+  lien: 'Membre' 
   });
   
   const [membres, setMembres] = useState([]);
@@ -82,7 +82,7 @@ function AdminInterface({ token }) {
       await axios.post(`${API_URL}/membres`, formData, axiosConfig);
       afficherMessage('✅ Membre ajouté avec succès', 'success');
       // MODIFIÉ : Reset avec sexe
-      setFormData({ nom: '', prenom: '', telephone: '', sexe: 'Masculin', lien: 'Étudiant' });
+      setFormData({ nom: '', prenom: '', telephone: '', sexe: 'Non spécifié', lien: 'Membre' });
       chargerMembres();
     } catch (error) {
       const errorMsg = error.response?.data?.error || 'Erreur lors de l\'ajout';
@@ -330,14 +330,14 @@ function AdminInterface({ token }) {
               </div>
               {/* NOUVEAU : Champ Sexe */}
               <div className="form-group">
-                <label>Sexe *</label>
+                <label>Sexe</label>
                 <select
                   value={formData.sexe}
                   onChange={(e) => setFormData({...formData, sexe: e.target.value})}
-                  required
                 >
-                  <option value="Masculin">👨 Masculin</option>
-                  <option value="Féminin">👩 Féminin</option>
+                  <option value="Non spécifié">Non spécifié</option>
+                  <option value="Masculin">Masculin</option>
+                  <option value="Féminin">Féminin</option>
                 </select>
               </div>
               <div className="form-group">
