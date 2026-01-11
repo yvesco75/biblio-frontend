@@ -59,10 +59,31 @@ function PointageInterface() {
   };
 
   // Vérifier si c'est une entrée ou sortie
-  const handleSelectMembreForMotif = (membre) => {
+  const handleSelectMembreForMotif = async (membre) => {
   setSelectedMembre(membre);
-  setShowMotifSelection(true);
-  setShowSuggestions(false);
+  setLoading(true);
+
+  try {
+    const response = await axios.post(`${API_URL}/pointer-by-id`, {
+      membreId: membre.id,
+      motif: null
+    });
+
+    if (response.data.needMotif) {
+      // ENTRÉE : demander motif
+      setShowMotifSelection(true);
+      setShowSuggestions(false);
+    } else {
+      // SORTIE : message direct
+      afficherMessage(`${response.data.membre.prenom} ${response.data.membre.nom}`, response.data.type);
+      setShowConfetti(true);
+      setTimeout(() => resetForm(), 3000);
+    }
+  } catch (error) {
+    afficherMessage('❌ Erreur', 'error');
+  } finally {
+    setLoading(false);
+  }
 };
 
 const confirmerSansMotif = async (membre) => {
