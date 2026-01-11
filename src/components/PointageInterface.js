@@ -85,40 +85,40 @@ const confirmerSansMotif = async (membre) => {
 };
 
   const handleConfirmWithMotif = async () => {
-    if (!selectedMembre) return;
+  if (!selectedMembre) return;
 
-    setLoading(true);
-    setMessage(null);
+  setLoading(true);
+  setMessage(null);
 
-    try {
-      const motifString = selectedMotifs.length > 0 
-        ? MOTIFS_DISPONIBLES
-            .filter(m => selectedMotifs.includes(m.id))
-            .map(m => m.label)
-            .join(', ')
-        : null;
+  try {
+    const motifString = selectedMotifs.length > 0 
+      ? MOTIFS_DISPONIBLES
+          .filter(m => selectedMotifs.includes(m.id))
+          .map(m => m.label)
+          .join(', ')
+      : null;
 
-      const response = await axios.post(`${API_URL}/pointer-by-id`, {
-        membreId: selectedMembre.id,
-        motif: motifString
-      });
+    const response = await axios.post(`${API_URL}/pointer-by-id`, {
+      membreId: selectedMembre.id,
+      motif: motifString
+    });
 
-      const { membre: membreData, type } = response.data;
-      
-      afficherMessage(
-        `${membreData.prenom} ${membreData.nom}`,
-        type
-      );
+    const { membre: membreData, type } = response.data;
+    
+    afficherMessage(
+      `${membreData.prenom} ${membreData.nom}`,
+      type
+    );
 
-      setShowConfetti(true);
-      setTimeout(() => resetForm(), 3000);
-    } catch (error) {
-      const errorMsg = error.response?.data?.error || 'Erreur de connexion';
-      afficherMessage(`❌ ${errorMsg}`, 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
+    setShowConfetti(true);
+    setTimeout(() => resetForm(), 3000);
+  } catch (error) {
+    const errorMsg = error.response?.data?.error || 'Erreur de connexion';
+    afficherMessage(`❌ ${errorMsg}`, 'error');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const resetForm = () => {
     setTelephone('');
