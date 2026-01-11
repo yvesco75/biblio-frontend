@@ -18,8 +18,8 @@ function AdminInterface({ token }) {
   nom: '', 
   prenom: '', 
   telephone: '', 
-  sexe: 'Non spécifié',
-  lien: 'Membre' 
+  sexe: 'Masculin',  // CHANGÉ de 'Non spécifié' à 'Masculin'
+  lien: 'Étudiant' 
   });
   
   const [membres, setMembres] = useState([]);
@@ -82,7 +82,7 @@ function AdminInterface({ token }) {
       await axios.post(`${API_URL}/membres`, formData, axiosConfig);
       afficherMessage('✅ Membre ajouté avec succès', 'success');
       // MODIFIÉ : Reset avec sexe
-      setFormData({ nom: '', prenom: '', telephone: '', sexe: 'Non spécifié', lien: 'Membre' });
+      setFormData({ nom: '', prenom: '', telephone: '', sexe: 'Masculin', lien: 'Étudiant' });
       chargerMembres();
     } catch (error) {
       const errorMsg = error.response?.data?.error || 'Erreur lors de l\'ajout';

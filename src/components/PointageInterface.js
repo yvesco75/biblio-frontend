@@ -1,4 +1,3 @@
-// src/components/PointageInterface.js - VERSION MISE À JOUR
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './PointageInterface.css';
@@ -14,10 +13,10 @@ function PointageInterface() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   
-  // NOUVEAU : État pour le motif de visite
   const [showMotifSelection, setShowMotifSelection] = useState(false);
   const [selectedMembre, setSelectedMembre] = useState(null);
   const [selectedMotifs, setSelectedMotifs] = useState([]);
+  const [isEntree, setIsEntree] = useState(true);
 
   const MOTIFS_DISPONIBLES = [
     { id: 'club-ia', label: 'Club IA 🤖', icon: '🤖' },
@@ -49,7 +48,6 @@ function PointageInterface() {
     return () => clearTimeout(timer);
   }, [telephone]);
 
-  // NOUVEAU : Gestion de la sélection des motifs
   const handleToggleMotif = (motifId) => {
     setSelectedMotifs(prev => {
       if (prev.includes(motifId)) {
@@ -60,14 +58,64 @@ function PointageInterface() {
     });
   };
 
-  // NOUVEAU : Étape 1 - Sélection du membre
-  const handleSelectMembreForMotif = (membre) => {
+  // Vérifier si c'est une entrée ou sortie
+  const handleSelectMembreForMotif = async (membre) => {
     setSelectedMembre(membre);
-    setShowMotifSelection(true);
-    setShowSuggestions(false);
+    setLoading(true);
+
+    try {
+      // Vérifier le dernier mouvement
+      const response = await axios.get(`${API_URL}/mouvements?limit=1000`);
+      const mouvements = response.data.filter(m => m.membre_id === membre.id);
+      
+      if (mouvements.length > 0) {
+        const dernierMouvement = mouvements[0];
+        setIsEntree(dernierMouvement.type === 'sortie');
+      } else {
+        setIsEntree(true);
+      }
+
+      // Si c'est une sortie, pointer directement sans motif
+      if (mouvements.length > 0 && mouvements[0].type === 'entrée') {
+        await confirmerSansMot if(membre);
+      } else {
+        // Si c'est une entrée, afficher sélection motif
+        setShowMotifSelection(true);
+        setShowSuggestions(false);
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+      afficherMessage('❌ Erreur de connexion', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // NOUVEAU : Étape 2 - Confirmation avec motif
+  const confirmerSansMotif = async (membre) => {
+    setLoading(true);
+    try {
+      const response = await axios.post(`${API_URL}/pointer-by-id`, {
+        membreId: membre.id,
+        motif: null
+      });
+
+      const { membre: membreData, type } = response.data;
+      
+      afficherMessage(
+        `${membreData.prenom} ${membreData.nom}`,
+        type
+      );
+
+      setShowConfetti(true);
+      setTimeout(() => resetForm(), 3000);
+    } catch (error) {
+      const errorMsg = error.response?.data?.error || 'Erreur de connexion';
+      afficherMessage(`❌ ${errorMsg}`, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleConfirmWithMotif = async () => {
     if (!selectedMembre) return;
 
@@ -95,11 +143,7 @@ function PointageInterface() {
       );
 
       setShowConfetti(true);
-
-      setTimeout(() => {
-        resetForm();
-      }, 3000);
-
+      setTimeout(() => resetForm(), 3000);
     } catch (error) {
       const errorMsg = error.response?.data?.error || 'Erreur de connexion';
       afficherMessage(`❌ ${errorMsg}`, 'error');
@@ -108,7 +152,6 @@ function PointageInterface() {
     }
   };
 
-  // NOUVEAU : Réinitialisation du formulaire
   const resetForm = () => {
     setTelephone('');
     setSuggestions([]);
@@ -149,7 +192,6 @@ function PointageInterface() {
   return (
     <div className="pointage-container">
       
-      {/* Confetti */}
       {showConfetti && (
         <div className="confetti-container">
           {[...Array(50)].map((_, i) => (
@@ -172,7 +214,6 @@ function PointageInterface() {
 
       <div className="pointage-card">
         
-        {/* Welcome Section */}
         <div className="welcome-section">
           <div className="welcome-icon-wrapper">
             <div className="welcome-icon-glow"></div>
@@ -182,7 +223,6 @@ function PointageInterface() {
           <p className="welcome-subtitle">Enregistrez votre présence en un clic</p>
         </div>
 
-        {/* Success Message */}
         {message && (
           <div className={`success-message ${messageType}`}>
             <div className="success-icon">
@@ -196,7 +236,6 @@ function PointageInterface() {
           </div>
         )}
 
-        {/* NOUVEAU : Sélection du motif */}
         {showMotifSelection && selectedMembre && (
           <div className="motif-selection-container">
             <h3 className="motif-title">
@@ -247,7 +286,6 @@ function PointageInterface() {
           </div>
         )}
 
-        {/* Input Section - Masqué si motif affiché */}
         {!showMotifSelection && (
           <>
             <div className="input-section">
@@ -273,7 +311,6 @@ function PointageInterface() {
               </div>
             </div>
 
-            {/* Suggestions */}
             {showSuggestions && suggestions.length > 0 && (
               <div className="suggestions-container">
                 <p className="suggestions-label">
@@ -307,7 +344,6 @@ function PointageInterface() {
               </div>
             )}
 
-            {/* No Results */}
             {showSuggestions && suggestions.length === 0 && telephone.length >= 3 && (
               <div className="no-results">
                 <div className="no-results-icon">🔍</div>
@@ -316,7 +352,6 @@ function PointageInterface() {
               </div>
             )}
 
-            {/* Info Box */}
             {!telephone && (
               <div className="info-box">
                 <div className="info-icon">💡</div>
