@@ -221,4 +221,20 @@ function SuperAdminPanel({ token }) {
   );
 }
 
+<button 
+  onClick={async () => {
+    if (!window.confirm('⚠️ SUPPRIMER TOUS LES MEMBRES ? Cette action est irréversible !')) return;
+    try {
+      await axios.post(`${API_URL}/reset-membres`, {}, axiosConfig);
+      afficherMessage('✅ Base réinitialisée', 'success');
+    } catch (error) {
+      afficherMessage('❌ Erreur', 'error');
+    }
+  }}
+  className="btn-danger"
+  style={{marginTop: '30px', width: '100%'}}
+>
+  🗑️ RÉINITIALISER LA BASE (Supprimer tous les membres)
+</button>
+
 export default SuperAdminPanel;
