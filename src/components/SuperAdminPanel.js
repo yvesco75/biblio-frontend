@@ -17,8 +17,8 @@ function SuperAdminPanel({ token }) {
   };
 
   useEffect(() => {
-  chargerAdmins();
-}, []);
+    chargerAdmins();
+  }, []);
 
   const chargerAdmins = async () => {
     try {
@@ -49,6 +49,16 @@ function SuperAdminPanel({ token }) {
       chargerAdmins();
     } catch (error) {
       afficherMessage(`❌ ${error.response?.data?.error || 'Erreur'}`, 'error');
+    }
+  };
+
+  const handleResetMembres = async () => {
+    if (!window.confirm('⚠️ SUPPRIMER TOUS LES MEMBRES ? Cette action est irréversible !')) return;
+    try {
+      await axios.post(`${API_URL}/reset-membres`, {}, axiosConfig);
+      afficherMessage('✅ Base réinitialisée', 'success');
+    } catch (error) {
+      afficherMessage('❌ Erreur', 'error');
     }
   };
 
@@ -135,6 +145,15 @@ function SuperAdminPanel({ token }) {
                 </div>
                 <button type="submit" className="btn-primary">✅ Ajouter Admin</button>
               </form>
+
+              {/* BOUTON RESET ICI */}
+              <button 
+                onClick={handleResetMembres}
+                className="btn-danger"
+                style={{marginTop: '30px', width: '100%'}}
+              >
+                🗑️ RÉINITIALISER LA BASE (Supprimer tous les membres)
+              </button>
             </div>
 
             <div className="table-container">
@@ -220,21 +239,5 @@ function SuperAdminPanel({ token }) {
     </div>
   );
 }
-
-<button 
-  onClick={async () => {
-    if (!window.confirm('⚠️ SUPPRIMER TOUS LES MEMBRES ? Cette action est irréversible !')) return;
-    try {
-      await axios.post(`${API_URL}/reset-membres`, {}, axiosConfig);
-      afficherMessage('✅ Base réinitialisée', 'success');
-    } catch (error) {
-      afficherMessage('❌ Erreur', 'error');
-    }
-  }}
-  className="btn-danger"
-  style={{marginTop: '30px', width: '100%'}}
->
-  🗑️ RÉINITIALISER LA BASE (Supprimer tous les membres)
-</button>
 
 export default SuperAdminPanel;
