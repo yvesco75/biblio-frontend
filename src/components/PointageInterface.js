@@ -61,29 +61,8 @@ function PointageInterface() {
   // Vérifier si c'est une entrée ou sortie
   const handleSelectMembreForMotif = async (membre) => {
   setSelectedMembre(membre);
-  setLoading(true);
-
-  try {
-    const response = await axios.post(`${API_URL}/pointer-by-id`, {
-      membreId: membre.id,
-      motif: null
-    });
-
-    if (response.data.needMotif) {
-      // ENTRÉE : demander motif
-      setShowMotifSelection(true);
-      setShowSuggestions(false);
-    } else {
-      // SORTIE : message direct
-      afficherMessage(`${response.data.membre.prenom} ${response.data.membre.nom}`, response.data.type);
-      setShowConfetti(true);
-      setTimeout(() => resetForm(), 3000);
-    }
-  } catch (error) {
-    afficherMessage('❌ Erreur', 'error');
-  } finally {
-    setLoading(false);
-  }
+  setShowMotifSelection(true);
+  setShowSuggestions(false);
 };
 
 const confirmerSansMotif = async (membre) => {
@@ -109,7 +88,6 @@ const confirmerSansMotif = async (membre) => {
   if (!selectedMembre) return;
 
   setLoading(true);
-  setMessage(null);
 
   try {
     const motifString = selectedMotifs.length > 0 
@@ -126,16 +104,11 @@ const confirmerSansMotif = async (membre) => {
 
     const { membre: membreData, type } = response.data;
     
-    afficherMessage(
-      `${membreData.prenom} ${membreData.nom}`,
-      type
-    );
-
+    afficherMessage(`${membreData.prenom} ${membreData.nom}`, type);
     setShowConfetti(true);
     setTimeout(() => resetForm(), 3000);
   } catch (error) {
-    const errorMsg = error.response?.data?.error || 'Erreur de connexion';
-    afficherMessage(`❌ ${errorMsg}`, 'error');
+    afficherMessage('❌ Erreur', 'error');
   } finally {
     setLoading(false);
   }
